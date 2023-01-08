@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/opensaucerer/bifrost/gcs"
+	"github.com/opensaucerer/biforst/gdrive"
 	bs3 "github.com/opensaucerer/bifrost/s3"
 	"github.com/opensaucerer/bifrost/shared/errors"
 	"google.golang.org/api/option"
@@ -75,6 +76,8 @@ func NewRainbowBridge(bc *BridgeConfig) (RainbowBridge, error) {
 	switch bc.Provider {
 	case "s3":
 		return newSimpleStorageService(bc)
+	case "gdrive":
+		return NewGoogleDriveStorage(bc), nil
 	case "gcs":
 		return newGoogleCloudStorage(bc)
 	default:
@@ -155,5 +158,37 @@ func newSimpleStorageService(g *BridgeConfig) (RainbowBridge, error) {
 		SecretKey:     g.SecretKey,
 		AccessKey:     g.AccessKey,
 		Client:        client,
+	}, nil
+}
+
+func newGoogleDriveStoage(g *BridgeConfig) (rainbowBridge, error) {
+	var client *http.Client
+	var token oauth2.Token{}
+	var err error
+	if g.CredentialsFile != nil {
+		f, err := os..Open(g.CredentialsFile)
+		if err != nil {
+			return nil, &BifrostError{
+				Err: err,
+				ErrorCode: errors.ErrUnauthorized,
+			}
+		}
+
+		defer f.Close()
+		err = json.NewDecoder(f).Decode(tok)
+		if err != nil {
+			return nil, &BifrostError{
+				Err: err,
+				ErrorCode: errors.ErrUnauthorized,
+			}
+		}
+	}
+
+	client = config.Client(ctx, tok)
+	return &gdrive.GoogleDriveStorage{
+		Client: client,
+		PublicRead: g.PublicRead,
+		EnableDebug: g.EnableDebug,
+		DefaultTimeout: g.DefaultTimeout,
 	}, nil
 }
