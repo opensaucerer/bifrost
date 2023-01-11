@@ -37,6 +37,7 @@ type BridgeConfig struct {
 
 type RainbowBridge interface {
 	UploadFile(path, filename string, options map[string]interface{}) (*types.UploadedFile, error)
+	UploadMultiFile(requests []*types.UploadFileRequest) ([]*types.UploadedFile, error)
 	Disconnect() error
 	Config() *types.BridgeConfig
 }

@@ -22,3 +22,13 @@ type UploadedFile struct {
 	// Quit receives a message to signal for the exit of an async process.
 	Quit chan bool
 }
+
+// UploadFileRequest is the request struct for Uploading Multiple Files.
+type UploadFileRequest struct {
+	// Path is the path to the file in memory.
+	Path string
+	// Filename is the name to store the file in cloud platform.
+	Filename string
+	// Options
+	Options map[string]interface{}
+}

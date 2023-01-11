@@ -22,4 +22,7 @@ const (
 
 	// ErrFileOperationFailed is returned when a file operation fails.
 	ErrFileOperationFailed = "file operation failed"
+
+	// ErrIncompleteMultiFileUpload is returned when a multifile upload fails on some files.
+	ErrIncompleteMultiFileUpload = "incomplete files upload"
 )

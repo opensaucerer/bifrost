@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -116,6 +117,44 @@ func (g *GoogleCloudStorage) UploadFile(path, filename string, options map[strin
 		Preview:        fmt.Sprintf("https://storage.googleapis.com/%s/%s", objAttrs.Bucket, objAttrs.Name),
 		ProviderObject: obj,
 	}, nil
+}
+
+/*
+UploadMultiFile uploads files to Google Cloud Storage and returns an error if all files
+are not uploaded successfully. Set EnableDebug to true in bridge.BridgeConfig to see
+detailed logs of errors if all files are not uploaded.
+
+Note: UploadMultiFile requires that a default bucket be set in bifrost.BridgeConfig.
+*/
+func (g *GoogleCloudStorage) UploadMultiFile(requests []*types.UploadFileRequest) ([]*types.UploadedFile, error) {
+	var err error
+	uploadedFiles := make([]*types.UploadedFile, 0, len(requests))
+
+	for _, request := range requests {
+		uploadedFile, err := g.UploadFile(request.Path, request.Filename, request.Options)
+		if err != nil {
+			if g.EnableDebug {
+				// log a failed upload file request
+				log.Printf("Upload request for file with path %s failed with err: %s\n", request.Path, err.Error())
+				continue
+			}
+		}
+		uploadedFiles = append(uploadedFiles, uploadedFile)
+	}
+
+	if len(uploadedFiles) == 0 {
+		err = &errors.BifrostError{
+			Err:       fmt.Errorf("upload operation failed for all/no files"),
+			ErrorCode: errors.ErrBadRequest,
+		}
+	} else if len(uploadedFiles) < len(requests) {
+		err = &errors.BifrostError{
+			Err:       fmt.Errorf("upload operation failed for %d files", len(requests)-len(uploadedFiles)),
+			ErrorCode: errors.ErrIncompleteMultiFileUpload,
+		}
+	}
+
+	return uploadedFiles, err
 }
 
 /*

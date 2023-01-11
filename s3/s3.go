@@ -105,6 +105,11 @@ func (s *SimpleStorageService) UploadFile(path, filename string, options map[str
 	}, nil
 }
 
+// UploadMultiFile
+func (s *SimpleStorageService) UploadMultiFile(requests []*types.UploadFileRequest) ([]*types.UploadedFile, error) {
+	return nil, nil
+}
+
 // Config returns the s3 configuration.
 func (s *SimpleStorageService) Config() *types.BridgeConfig {
 	return &types.BridgeConfig{
